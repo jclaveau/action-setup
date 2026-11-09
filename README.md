@@ -241,6 +241,8 @@ jobs:
 
 ## Notes
 
+When the requested version is exact (such as `12.16.1`) and the `pnpm` already on `PATH` reports that same version, for example one shipped by the job's container image, the action skips the install: `PATH` and `PNPM_HOME` stay as the environment set them, and `bin_dest` is the directory of that `pnpm`. A range (such as `12`) always installs.
+
 This action does not set up Node.js. Use [actions/setup-node](https://github.com/actions/setup-node) yourself. As an alternative for pnpm v11 or newer, [`pnpm/setup`](https://github.com/pnpm/setup) can install pnpm and Node.js in a single step.
 
 ## License
