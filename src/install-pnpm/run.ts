@@ -1,4 +1,4 @@
-import { addPath, exportVariable } from '@actions/core'
+import { addPath, exportVariable, info } from '@actions/core'
 import { exec } from '@actions/exec'
 import { spawn } from 'child_process'
 import { rm, writeFile, mkdir, symlink } from 'fs/promises'
@@ -11,6 +11,7 @@ import { satisfies, subset, validRange } from 'semver'
 import pnpmLock from './bootstrap/pnpm-lock.json'
 import exeLock from './bootstrap/exe-lock.json'
 import nativeLock from './bootstrap/native-lock.json'
+import findInstalledPnpm from './installed-pnpm'
 
 const bootstrapPnpmVersion = pnpmLock.packages['node_modules/pnpm'].version
 const bootstrapExeVersion = exeLock.packages['node_modules/@pnpm/exe'].version
@@ -38,6 +39,14 @@ export interface SelfInstallerResult {
 export async function runSelfInstaller(inputs: Inputs): Promise<SelfInstallerResult> {
   const { version, dest, packageJsonFile } = inputs
   const targetVersion = readTargetVersion({ version, packageJsonFile })
+
+  // PATH and PNPM_HOME are left as the environment set them up.
+  const installedPnpm = await findInstalledPnpm(targetVersion)
+  if (installedPnpm) {
+    info(`pnpm ${targetVersion} is already installed at ${installedPnpm}, skipping the self-installer`)
+    return { exitCode: 0, binDest: path.dirname(installedPnpm) }
+  }
+
   const native = targetsPnpm12(targetVersion)
   let standalone = false
   if (!native) {
